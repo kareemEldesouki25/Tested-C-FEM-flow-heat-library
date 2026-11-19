@@ -1,0 +1,13 @@
+# SCOPING: <library name> v0.1
+## 1. What it does today
+Equations / element / stabilisation / BCs / time stepping / linear solver / validation done
+## 2. Code map
+| file or function | job | keep / rewrite / delete |
+## 3. Public API v0.1 (5-8 calls)
+Python sketch: mesh = ...; solver = ...; solver.run(...); fields = ...
+## 4. Out of scope for v0.1 (at least 3)
+## 5. Gaps to close, in priority order
+## 6. Known issues
+- Convergence table is non-monotonic: my diagnosis is ...
+- Pressure null space: my diagnosis is ...
+- Wall-force integral: my diagnosis is ...
