@@ -239,22 +239,37 @@ by round-off.
 In exact arithmetic, the damage would stay in the constant mode, because
 K1·1 = K2·1 = 0 (partition of unity), and a constant pressure offset exerts
 no force on the velocity. But the offset is huge, so round-off of about
-|p|·1e-16 in K1·p and K2·p does reach the momentum RHS. This explains the
-erratic pressure column in the README table, and it means u, v from the
-current code are not a stable reference either.
+|p|·1e-16 in K1·p and K2·p does reach the momentum RHS.
  
-The right-hand side is compatible: the sum of the RHS entries is
-−(1/ε)·∮ u·n ds = 0, because the lid velocity is tangential to the wall.
-So a pinned system has a valid solution.
+**Status: hypothesis, not yet tested.** This is the likely cause of the
+erratic pressure column in the README table, and if it is right, u and v
+from the current code are not a stable reference either. The checks below
+(gap #1) are what prove or disprove it.
+ 
+**Compatibility of the RHS.** The sum of the RHS entries is
+−(1/ε)·∫ ∇·u_h dΩ = −(1/ε)·∮ u_h·n ds. On the top wall u_h·n = v = 0. The
+side walls are only partly zero: in each top side element, u_h·n varies
+linearly from 0 to the corner value 0.5 (bilinear interpolation), which
+gives a flux of 0.5·dy/2 out through the left wall and the same flux in
+through the right wall. These cancel only because both corners have the
+same value. So the pinned system has a valid solution for this BC set,
+but a different BC set (e.g. unequal corner values) would break it.
  
 **Fix.** Pin p = 0 at one node: replace that row and column of K0 with the
 identity, and set that RHS entry to 0. Then factorise once with a sparse
 LDLᵀ and solve each step. Report p relative to that node.
  
-**Check.** K0·1 ≈ 0 before pinning. After pinning, the residual of the
-original (unpinned) equations is at round-off level, and p no longer
-changes when K_inv is recomputed.
- 
+**Checks (part of gap #1).**
+1. K0·1 ≈ 0 at round-off level. This confirms the null space.
+2. max|p| from the current code is very large. This confirms that the
+   inverse is dominated by round-off.
+3. Σ RHS_cont ≈ 0 at round-off level, every step. This confirms
+   compatibility. Keep it as an assertion in `PressureSolver`, so a BC
+   set that breaks compatibility fails loudly.
+4. After pinning: the residual of the original (unpinned) equations is at
+   round-off level, and the README table's pressure column becomes smooth.
+   If the column is still erratic, the hypothesis is wrong and issue 1
+   needs a new diagnosis.
 ### Issue 2 — The wall-force routine is wrong in three ways (lines 259–316)
  
 **Diagnosis.**
